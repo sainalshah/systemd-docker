@@ -13,7 +13,7 @@ The full context is in [Docker Issue #6791](https://github.com/docker/docker/iss
 Installation
 ============
 
-Copy `systemd-docker` to `/opt/bin` (really anywhere you want).  You can download/compile through the normal `go get github.com/ibuildthecloud/systemd-docker`
+Copy `systemd-docker` to `/opt/bin` (really anywhere you want).  You can download/compile through the normal `go get github.com/sainalshah/systemd-docker`
 
 
 Quick Usage
@@ -110,7 +110,7 @@ Running on CoreOS
 
 If you are running on CoreOS, it may be more problematic to install `systemd-docker` to `/opt/bin`.  To make this easier add the following line to your unit file.
 
-`ExecStartPre=/usr/bin/docker run --rm -v /opt/bin:/opt/bin ibuildthecloud/systemd-docker`
+`ExecStartPre=/usr/bin/docker run --rm -v /opt/bin:/opt/bin sainalshah/systemd-docker`
 
 That command will install systemd-docker to /opt/bin.  The full nginx example that is above would now be as below.
 
@@ -121,7 +121,7 @@ After=docker.service
 Requires=docker.service
 
 [Service]
-ExecStartPre=/usr/bin/docker run --rm -v /opt/bin:/opt/bin ibuildthecloud/systemd-docker
+ExecStartPre=/usr/bin/docker run --rm -v /opt/bin:/opt/bin sainalshah/systemd-docker
 ExecStart=/opt/bin/systemd-docker run --rm --name %n nginx
 Restart=always
 RestartSec=10s
@@ -143,7 +143,7 @@ It has `3:cpuacct,cpu:/user.slice` in `/proc/[pid]/cgroups` which is inconsisten
 
 This will cause `systemd-docker` to fail unless run with`systemd-docker --cgroups name=systemd run`
 
-See https://github.com/ibuildthecloud/systemd-docker/issues/15 for details.
+See https://github.com/sainalshah/systemd-docker/issues/15 for details.
 
 License
 -------

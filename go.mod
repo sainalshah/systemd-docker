@@ -1,4 +1,4 @@
-module github.com/ibuildthecloud/systemd-docker
+module github.com/sainalshah/systemd-docker
 
 go 1.24.5
 
