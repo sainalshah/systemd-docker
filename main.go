@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"errors"
+	"flag"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -16,7 +17,6 @@ import (
 	"time"
 
 	"github.com/docker/docker/opts"
-	flag "github.com/docker/docker/pkg/mflag"
 
 	dockerClient "github.com/fsouza/go-dockerclient"
 )
@@ -77,11 +77,11 @@ func parseContext(args []string) (*Context, error) {
 
 	flCgroups := opts.NewListOpts(nil)
 
-	flags.StringVar(&c.PidFile, []string{"p", "-pid-file"}, "", "pipe file")
-	flags.BoolVar(&c.Logs, []string{"l", "-logs"}, true, "pipe logs")
-	flags.BoolVar(&c.Notify, []string{"n", "-notify"}, false, "setup systemd notify for container")
-	flags.BoolVar(&c.Env, []string{"e", "-env"}, false, "inherit environment variable")
-	flags.Var(&flCgroups, []string{"c", "-cgroups"}, "cgroups to take ownership of or 'all' for all cgroups available")
+	flags.StringVar(&c.PidFile, "pid-file", "", "pipe file")
+	flags.BoolVar(&c.Logs, "logs", true, "pipe logs")
+	flags.BoolVar(&c.Notify, "notify", false, "setup systemd notify for container")
+	flags.BoolVar(&c.Env, "env", false, "inherit environment variable")
+	flags.Var(&flCgroups, "cgroups", "cgroups to take ownership of or 'all' for all cgroups available")
 
 	err := flags.Parse(args)
 	if err != nil {
