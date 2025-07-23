@@ -215,7 +215,7 @@ func TestBadExec(t *testing.T) {
 
 func TestGoodExec(t *testing.T) {
 	c := &Context{
-		Args: []string{"-d", "busybox", "echo", "hi"},
+		Args: []string{"-d", "busybox", "sleep", "10"},
 	}
 
 	err := runContainer(c)
@@ -231,6 +231,15 @@ func TestGoodExec(t *testing.T) {
 
 	if c.Pid <= 0 {
 		t.Fatal("Bad container pid", c.Pid)
+	}
+
+	// Clean up the container
+	client, err := getClient(c)
+	if err == nil {
+		client.RemoveContainer(dockerClient.RemoveContainerOptions{
+			ID:    c.Id,
+			Force: true,
+		})
 	}
 }
 
@@ -252,7 +261,7 @@ func TestParseCgroups(t *testing.T) {
 
 func TestMoveCgroup(t *testing.T) {
 	c := &Context{
-		Args: []string{"-d", "busybox", "echo", "hi"},
+		Args: []string{"-d", "busybox", "sleep", "10"},
 	}
 
 	err := runContainer(c)
@@ -274,10 +283,19 @@ func TestMoveCgroup(t *testing.T) {
 	if !moved || err != nil {
 		t.Fatal("Failed to move namespaces ", moved, err)
 	}
+
+	// Clean up the container
+	client, err := getClient(c)
+	if err == nil {
+		client.RemoveContainer(dockerClient.RemoveContainerOptions{
+			ID:    c.Id,
+			Force: true,
+		})
+	}
 }
 
 func TestRemoveNoLogs(t *testing.T) {
-	c, err := mainWithArgs([]string{"--logs=false", "run", "-rm", "busybox", "echo", "hi"})
+	c, err := mainWithArgs([]string{"--logs=false", "run", "-rm", "busybox", "sh", "-c", "echo hi; sleep 1"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -294,7 +312,7 @@ func TestRemoveNoLogs(t *testing.T) {
 }
 
 func TestRemoveWithLogs(t *testing.T) {
-	c, err := mainWithArgs([]string{"--logs", "run", "-rm", "busybox", "echo", "hi"})
+	c, err := mainWithArgs([]string{"--logs", "run", "-rm", "busybox", "sh", "-c", "echo hi; sleep 1"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -338,7 +356,7 @@ func TestNamedContainerNoRm(t *testing.T) {
 
 	deleteTestContainer(t)
 
-	c, err := mainWithArgs([]string{"--logs", "run", "--privileged=true", "--name", "systemd-docker-test", "--privileged=true", "busybox", "echo", "hi"})
+	c, err := mainWithArgs([]string{"--logs", "run", "--privileged=true", "--name", "systemd-docker-test", "--privileged=true", "busybox", "sh", "-c", "echo hi; sleep 1"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -352,7 +370,7 @@ func TestNamedContainerNoRm(t *testing.T) {
 		t.Fatal("Should not be running")
 	}
 
-	c, err = mainWithArgs([]string{"--logs", "run", "--privileged=true", "--name", "systemd-docker-test", "busybox", "echo", "hi"})
+	c, err = mainWithArgs([]string{"--logs", "run", "--privileged=true", "--name", "systemd-docker-test", "busybox", "sh", "-c", "echo hi; sleep 1"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -385,7 +403,7 @@ func TestNamedContainerRmPrevious(t *testing.T) {
 
 	deleteTestContainer(t)
 
-	c, err := mainWithArgs([]string{"--logs", "run", "--name", "systemd-docker-test", "busybox", "echo", "hi"})
+	c, err := mainWithArgs([]string{"--logs", "run", "--name", "systemd-docker-test", "busybox", "sh", "-c", "echo hi; sleep 1"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -399,7 +417,7 @@ func TestNamedContainerRmPrevious(t *testing.T) {
 		t.Fatal("Should not be running")
 	}
 
-	c, err = mainWithArgs([]string{"--logs", "run", "--rm", "--name", "systemd-docker-test", "busybox", "echo", "hi"})
+	c, err = mainWithArgs([]string{"--logs", "run", "--rm", "--name", "systemd-docker-test", "busybox", "sh", "-c", "echo hi; sleep 1"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -474,7 +492,7 @@ func TestPidFile(t *testing.T) {
 
 	os.Remove(pidFileName)
 
-	c, err := mainWithArgs([]string{"--logs=false", "--pid-file", "./pid-file", "run", "--rm", "busybox", "echo", "hi"})
+	c, err := mainWithArgs([]string{"--logs=false", "--pid-file", "./pid-file", "run", "--rm", "busybox", "sh", "-c", "echo hi; sleep 1"})
 	if err != nil {
 		t.Fatal(err)
 	}
