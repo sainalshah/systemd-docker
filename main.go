@@ -6,7 +6,6 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"net"
 	"os"
@@ -151,7 +150,7 @@ func lookupNamedContainer(c *Context) error {
 		return err
 	}
 
-	container, err := client.InspectContainer(c.Name)
+	container, err := client.InspectContainerWithOptions(dockerClient.InspectContainerOptions{ID: c.Name})
 	if _, ok := err.(*dockerClient.NoSuchContainer); ok {
 		return nil
 	}
@@ -175,7 +174,7 @@ func lookupNamedContainer(c *Context) error {
 			return err
 		}
 
-		container, err = client.InspectContainer(c.Name)
+		container, err = client.InspectContainerWithOptions(dockerClient.InspectContainerOptions{ID: c.Name})
 		if err != nil {
 			return err
 		}
@@ -208,7 +207,7 @@ func launchContainer(c *Context) error {
 
 	go io.Copy(os.Stderr, errorPipe)
 
-	bytes, err := ioutil.ReadAll(outputPipe)
+	bytes, err := io.ReadAll(outputPipe)
 	if err != nil {
 		return err
 	}
@@ -271,17 +270,17 @@ func getContainerPid(c *Context) (int, error) {
 		return 0, err
 	}
 
-	container, err := client.InspectContainer(c.Id)
+	container, err := client.InspectContainerWithOptions(dockerClient.InspectContainerOptions{ID: c.Id})
 	if err != nil {
 		return 0, err
 	}
 
 	if container == nil {
-		return 0, errors.New(fmt.Sprintf("Failed to find container %s", c.Id))
+		return 0, fmt.Errorf("Failed to find container %s", c.Id)
 	}
 
 	if container.State.Pid <= 0 {
-		return 0, errors.New(fmt.Sprintf("Pid is %d for container %s", container.State.Pid, c.Id))
+		return 0, fmt.Errorf("Pid is %d for container %s", container.State.Pid, c.Id)
 	}
 
 	return container.State.Pid, nil
@@ -292,6 +291,7 @@ func getCgroupsForPid(pid int) (map[string]string, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer file.Close()
 
 	ret := map[string]string{}
 
@@ -323,6 +323,7 @@ func getCgroupPids(cgroupName string, cgroupPath string) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer file.Close()
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
@@ -337,7 +338,7 @@ func getCgroupPids(cgroupName string, cgroupPath string) ([]string, error) {
 }
 
 func writePid(pid string, path string) error {
-	return ioutil.WriteFile(path, []byte(pid), 0644)
+	return os.WriteFile(path, []byte(pid), 0644)
 }
 
 func moveCgroups(c *Context) (bool, error) {
@@ -453,7 +454,7 @@ func pidFile(c *Context) error {
 		return nil
 	}
 
-	err := ioutil.WriteFile(c.PidFile, []byte(strconv.Itoa(c.Pid)), 0644)
+	err := os.WriteFile(c.PidFile, []byte(strconv.Itoa(c.Pid)), 0644)
 	if err != nil {
 		return err
 	}
@@ -491,8 +492,8 @@ func keepAlive(c *Context) error {
 		}
 
 		/* Good old polling... */
-		for true {
-			container, err := client.InspectContainer(c.Id)
+		for {
+			container, err := client.InspectContainerWithOptions(dockerClient.InspectContainerOptions{ID: c.Id})
 			if err != nil {
 				return err
 			}
